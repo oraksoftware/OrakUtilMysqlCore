@@ -1,0 +1,83 @@
+﻿# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+*.DotSettings.user
+
+# Visual Studio Code
+.vscode/
+
+# Build directories
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Publish
+publish/
+**/publish/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+
+# Logs
+*.log
+logs/
+
+# User-specific files
+*.suo
+*.user
+*.userprefs
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dotnet
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Core
+# Ignore local development secrets and environment-specific settings
+secrets.json
+**/secrets.json
+appsettings.Development.json
+**/appsettings.Development.json
+
+# IIS Express
+/.vs/*/applicationhost.config
+
+# Publish output
+**/bin/Release/**
+**/bin/Debug/**
+
+# Debug symbols and pdbs (optional)
+*.pdb
+
+# Resharper
+_ReSharper*/
+*resharper*
+
+# JetBrains Rider caches
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Avoid accidentally committing large files
+*.log
+*.cache
+
+# End of .gitignore
+
