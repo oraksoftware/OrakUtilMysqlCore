@@ -2,149 +2,149 @@
 using OrakUtilDotNetCore.FiContainer;
 using System.Data;
 
-namespace OrakUtilMysqlCore.FiDbHelper
+namespace OrakUtilMysqlCore.FiDbHelper;
+
+public class FiMysql
 {
-  public class FiMysql
+  public string connString { get; private set; }
+  public MySqlConnection conn { get; private set; }
+
+  /// <summary>
+  /// Comm : Command
+  /// </summary>
+  public MySqlCommand comm { get; private set; }
+
+
+  public FiMysql(string connString)
   {
-    public string connString { get; private set; }
-    public MySqlConnection conn { get; private set; }
+    this.connString = connString;
+    //conn = new MySqlConnection(this.connString);
+    //comm = conn.CreateCommand();
+  }
 
-    /// <summary>
-    /// Comm : Command
-    /// </summary>
-    public MySqlCommand comm { get; private set; }
-
-
-    public FiMysql(string connString)
+  private static MySqlParameter[] ProcessParameters(FiKeybean fkbParams)
+  {
+    MySqlParameter[] pars = fkbParams.Select(pair => new MySqlParameter()
     {
-      this.connString = connString;
-      //conn = new MySqlConnection(this.connString);
-      //comm = conn.CreateCommand();
+      ParameterName = pair.Key, Value = pair.Value
+    }).ToArray();
+
+    return pars;
+  }
+
+
+
+  public virtual int RunQuery(string query, FiKeybean parameters)
+  {
+    comm.Parameters.Clear();
+    comm.CommandText = query;
+    comm.CommandType = CommandType.Text;
+
+    if (parameters != null && parameters.Count > 0)
+    {
+      comm.Parameters.AddRange(ProcessParameters(parameters));
     }
 
+    int result = 0;
 
-    // private SqlParameter[] ProcessParameters(params ParamItem[] parameters)
-    // {
-    // 	SqlParameter[] pars = parameters.Select(x => new SqlParameter()
-    // 	{
-    // 		ParameterName = x.ParamName,
-    // 		Value = x.ParamValue
-    // 	}).ToArray();
-    //
-    // 	return pars;
-    // }
-
-    private MySqlParameter[] ProcessParameters(FiKeybean fkbParams)
+    conn.Open();
+    try
     {
-      MySqlParameter[] pars = fkbParams.Select(pair => new MySqlParameter()
-      {
-        ParameterName = pair.Key, Value = pair.Value
-      }).ToArray();
-
-      return pars;
+      result = comm.ExecuteNonQuery();
+      if (result == -1) result = 1;
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+      result = -2;
+      //throw;
     }
 
+    conn.Close();
 
-    // public virtual int RunQuery(string query, params ParamItem[] parameters)
-    // {
-    // 	comm.Parameters.Clear();
-    // 	comm.CommandText = query;
-    // 	comm.CommandType = CommandType.Text;
-    //
-    // 	if (parameters != null && parameters.Length > 0)
-    // 	{
-    // 		comm.Parameters.AddRange(ProcessParameters(parameters));
-    // 	}
-    //
-    // 	int result = 0;
-    //
-    // 	conn.Open();
-    // 	try
-    // 	{
-    // 		result = comm.ExecuteNonQuery();
-    // 		if (result == -1) result = 1;
-    // 	}
-    // 	catch (Exception e)
-    // 	{
-    // 		Console.WriteLine(e);
-    // 		result = -2;
-    // 		//throw;
-    // 	}
-    //
-    // 	conn.Close();
-    //
-    // 	return result;
-    // }
+    return result;
+  }
 
-    public virtual int RunQuery(string query, FiKeybean parameters)
+  public virtual DataTable RunProc(string procName, FiKeybean parameters) //params ParamItem[] parameters
+  {
+    comm.Parameters.Clear();
+    comm.CommandText = procName;
+    comm.CommandType = CommandType.StoredProcedure;
+
+    if (parameters != null && parameters.Count > 0)
     {
-      comm.Parameters.Clear();
-      comm.CommandText = query;
-      comm.CommandType = CommandType.Text;
-
-      if (parameters != null && parameters.Count > 0)
-      {
-        comm.Parameters.AddRange(ProcessParameters(parameters));
-      }
-
-      int result = 0;
-
-      conn.Open();
-      try
-      {
-        result = comm.ExecuteNonQuery();
-        if (result == -1) result = 1;
-      }
-      catch (Exception e)
-      {
-        Console.WriteLine(e);
-        result = -2;
-        //throw;
-      }
-
-      conn.Close();
-
-      return result;
+      comm.Parameters.AddRange(ProcessParameters(parameters));
     }
 
-    public virtual DataTable RunProc(string procName, FiKeybean parameters) //params ParamItem[] parameters
+    DataTable dt = new DataTable();
+    MySqlDataAdapter adapter = new MySqlDataAdapter(comm);
+    adapter.Fill(dt);
+
+    return dt;
+  }
+
+
+  public virtual DataTable GetTable(string query, FiKeybean parameters) //params ParamItem[] parameters
+  {
+    comm.Parameters.Clear();
+    comm.CommandText = query;
+    comm.CommandType = CommandType.Text;
+
+    if (parameters != null && parameters.Count > 0)
     {
-      comm.Parameters.Clear();
-      comm.CommandText = procName;
-      comm.CommandType = CommandType.StoredProcedure;
-
-      if (parameters != null && parameters.Count > 0)
-      {
-        comm.Parameters.AddRange(ProcessParameters(parameters));
-      }
-
-      DataTable dt = new DataTable();
-      MySqlDataAdapter adapter = new MySqlDataAdapter(comm);
-      adapter.Fill(dt);
-
-      return dt;
+      comm.Parameters.AddRange(ProcessParameters(parameters));
     }
 
+    MySqlDataAdapter da = new MySqlDataAdapter(comm);
 
-    public virtual DataTable GetTable(string query, FiKeybean parameters) //params ParamItem[] parameters
-    {
-      comm.Parameters.Clear();
-      comm.CommandText = query;
-      comm.CommandType = CommandType.Text;
+    // Adaptor : otomatik bağlantı açar. Verileri çeker(sorguyu çalıştırır) ve bir datatable 'a doldurur ve bağlantıyı otomatik kapatır.
 
-      if (parameters != null && parameters.Count > 0)
-      {
-        comm.Parameters.AddRange(ProcessParameters(parameters));
-      }
+    DataTable dt = new DataTable();
+    da.Fill(dt);
 
-      MySqlDataAdapter da = new MySqlDataAdapter(comm);
-
-      // Adaptor : otomatik bağlantı açar. Verileri çeker(sorguyu çalıştırır) ve bir datatable 'a doldurur ve bağlantıyı otomatik kapatır.
-
-      DataTable dt = new DataTable();
-      da.Fill(dt);
-
-      return dt;
-    }
+    return dt;
   }
 }
+
+
+// private SqlParameter[] ProcessParameters(params ParamItem[] parameters)
+// {
+// 	SqlParameter[] pars = parameters.Select(x => new SqlParameter()
+// 	{
+// 		ParameterName = x.ParamName,
+// 		Value = x.ParamValue
+// 	}).ToArray();
+//
+// 	return pars;
+// }
+
+// public virtual int RunQuery(string query, params ParamItem[] parameters)
+// {
+// 	comm.Parameters.Clear();
+// 	comm.CommandText = query;
+// 	comm.CommandType = CommandType.Text;
+//
+// 	if (parameters != null && parameters.Length > 0)
+// 	{
+// 		comm.Parameters.AddRange(ProcessParameters(parameters));
+// 	}
+//
+// 	int result = 0;
+//
+// 	conn.Open();
+// 	try
+// 	{
+// 		result = comm.ExecuteNonQuery();
+// 		if (result == -1) result = 1;
+// 	}
+// 	catch (Exception e)
+// 	{
+// 		Console.WriteLine(e);
+// 		result = -2;
+// 		//throw;
+// 	}
+//
+// 	conn.Close();
+//
+// 	return result;
+// }
