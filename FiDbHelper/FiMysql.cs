@@ -1,4 +1,5 @@
 ﻿using MySqlConnector;
+using OrakUtilDotNetCore.FiConfig;
 using OrakUtilDotNetCore.FiContainer;
 using System.Data;
 
@@ -6,20 +7,32 @@ namespace OrakUtilMysqlCore.FiDbHelper;
 
 public class FiMysql
 {
-  public string connString { get; private set; }
-  public MySqlConnection conn { get; private set; }
+  private string? connString { get; set; }
 
-  /// <summary>
-  /// Comm : Command
-  /// </summary>
-  public MySqlCommand comm { get; private set; }
+  //public MySqlConnection conn { get; private set; }
+  //public MySqlCommand comm { get; private set; }
 
-
-  public FiMysql(string connString)
+  public FiMysql(string? connString)
   {
     this.connString = connString;
     //conn = new MySqlConnection(this.connString);
     //comm = conn.CreateCommand();
+  }
+
+  public bool TestConnection()
+  {
+    try
+    {
+      using (MySqlConnection testConn = new MySqlConnection(connString))
+      {
+        testConn.Open();
+        return true;
+      }
+    }
+    catch
+    {
+      return false;
+    }
   }
 
   private static MySqlParameter[] ProcessParameters(FiKeybean fkbParams)
@@ -34,13 +47,18 @@ public class FiMysql
 
 
 
-  public virtual int RunQuery(string query, FiKeybean parameters)
+  public virtual Fdr ExecQuery(string query, FiKeybean? parameters)
   {
+    Fdr fdrResult = new Fdr();
+
+    using MySqlConnection conn = new MySqlConnection(connString);
+    using MySqlCommand comm = conn.CreateCommand();
+
     comm.Parameters.Clear();
     comm.CommandText = query;
     comm.CommandType = CommandType.Text;
 
-    if (parameters != null && parameters.Count > 0)
+    if (parameters is { Count: > 0 })
     {
       comm.Parameters.AddRange(ProcessParameters(parameters));
     }
@@ -51,22 +69,32 @@ public class FiMysql
     try
     {
       result = comm.ExecuteNonQuery();
+      // Rows affected is -1 for statements that do not affect rows
       if (result == -1) result = 1;
+      fdrResult.boResult = true;
+      fdrResult.lnRowsAffected = result;
     }
     catch (Exception e)
     {
       Console.WriteLine(e);
+      //FiAppConfig.fiLog?.Error();
       result = -2;
-      //throw;
+      fdrResult.boResult = false;
+      fdrResult.refException = e;
+    }
+    finally
+    {
+      conn.Close();
     }
 
-    conn.Close();
-
-    return result;
+    return fdrResult;
   }
 
   public virtual DataTable RunProc(string procName, FiKeybean parameters) //params ParamItem[] parameters
   {
+    using MySqlConnection conn = new MySqlConnection(this.connString);
+    using MySqlCommand comm = conn.CreateCommand();
+
     comm.Parameters.Clear();
     comm.CommandText = procName;
     comm.CommandType = CommandType.StoredProcedure;
@@ -84,26 +112,45 @@ public class FiMysql
   }
 
 
-  public virtual DataTable GetTable(string query, FiKeybean parameters) //params ParamItem[] parameters
+  public Fdr SelectDtb(string query, FiKeybean? parameters)
   {
+    Fdr fdrResult = new Fdr();
+
+    using MySqlConnection conn = new MySqlConnection(this.connString);
+    using MySqlCommand comm = conn.CreateCommand();
+
     comm.Parameters.Clear();
     comm.CommandText = query;
     comm.CommandType = CommandType.Text;
 
-    if (parameters != null && parameters.Count > 0)
+    if (parameters is { Count: > 0 })
     {
       comm.Parameters.AddRange(ProcessParameters(parameters));
     }
 
+    // Adaptor : otomatik bağlantı açar. Verileri çeker(sorguyu çalıştırır)
+    // ve bir datatable 'a doldurur ve bağlantıyı otomatik kapatır.
     MySqlDataAdapter da = new MySqlDataAdapter(comm);
 
-    // Adaptor : otomatik bağlantı açar. Verileri çeker(sorguyu çalıştırır) ve bir datatable 'a doldurur ve bağlantıyı otomatik kapatır.
+    try
+    {
+      DataTable dt = new DataTable();
+      da.Fill(dt);
+      fdrResult.boResult = true;
+      fdrResult.refDtbVal = dt;
+      return fdrResult;
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+      fdrResult.boResult = false;
+      fdrResult.refException = e;
+      // Optionally, return null or handle differently
+      return fdrResult; //new DataTable(); // or null
+    }
 
-    DataTable dt = new DataTable();
-    da.Fill(dt);
-
-    return dt;
   }
+
 }
 
 
