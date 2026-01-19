@@ -5,19 +5,15 @@ using System.Data;
 
 namespace OrakUtilMysqlCore.FiDbHelper;
 
-public class FiMysql
+public class FiMysql(string? connString)
 {
-  private string? connString { get; set; }
+  private string? connString { get; set; } = connString;
 
   //public MySqlConnection conn { get; private set; }
   //public MySqlCommand comm { get; private set; }
 
-  public FiMysql(string? connString)
-  {
-    this.connString = connString;
-    //conn = new MySqlConnection(this.connString);
-    //comm = conn.CreateCommand();
-  }
+  //conn = new MySqlConnection(this.connString);
+  //comm = conn.CreateCommand();
 
   public bool TestConnection()
   {
@@ -90,28 +86,6 @@ public class FiMysql
     return fdrResult;
   }
 
-  public virtual DataTable RunProc(string procName, FiKeybean parameters) //params ParamItem[] parameters
-  {
-    using MySqlConnection conn = new MySqlConnection(this.connString);
-    using MySqlCommand comm = conn.CreateCommand();
-
-    comm.Parameters.Clear();
-    comm.CommandText = procName;
-    comm.CommandType = CommandType.StoredProcedure;
-
-    if (parameters != null && parameters.Count > 0)
-    {
-      comm.Parameters.AddRange(ProcessParameters(parameters));
-    }
-
-    DataTable dt = new DataTable();
-    MySqlDataAdapter adapter = new MySqlDataAdapter(comm);
-    adapter.Fill(dt);
-
-    return dt;
-  }
-
-
   public Fdr SelectDtb(string query, FiKeybean? parameters)
   {
     Fdr fdrResult = new Fdr();
@@ -146,13 +120,32 @@ public class FiMysql
       fdrResult.boResult = false;
       fdrResult.refException = e;
       // Optionally, return null or handle differently
-      return fdrResult; //new DataTable(); // or null
+      return fdrResult;
+    }
+  }
+
+  public virtual DataTable ExecProcDtb(string procName, FiKeybean parameters) //params ParamItem[] parameters
+  {
+    using MySqlConnection conn = new MySqlConnection(this.connString);
+    using MySqlCommand comm = conn.CreateCommand();
+
+    comm.Parameters.Clear();
+    comm.CommandText = procName;
+    comm.CommandType = CommandType.StoredProcedure;
+
+    if (parameters != null && parameters.Count > 0)
+    {
+      comm.Parameters.AddRange(ProcessParameters(parameters));
     }
 
+    DataTable dt = new DataTable();
+    MySqlDataAdapter adapter = new MySqlDataAdapter(comm);
+    adapter.Fill(dt);
+
+    return dt;
   }
 
 }
-
 
 // private SqlParameter[] ProcessParameters(params ParamItem[] parameters)
 // {
