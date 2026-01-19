@@ -5,15 +5,19 @@ using System.Data;
 
 namespace OrakUtilMysqlCore.FiDbHelper;
 
-public class FiMysql(string? connString)
+public class FiMysql
 {
-  private string? connString { get; set; } = connString;
+  private string? connString { get; set; }
 
   //public MySqlConnection conn { get; private set; }
   //public MySqlCommand comm { get; private set; }
 
-  //conn = new MySqlConnection(this.connString);
-  //comm = conn.CreateCommand();
+  public FiMysql(string? connString)
+  {
+    this.connString = connString;
+    //conn = new MySqlConnection(this.connString);
+    //comm = conn.CreateCommand();
+  }
 
   public bool TestConnection()
   {
