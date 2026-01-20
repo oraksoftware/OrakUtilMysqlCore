@@ -19,6 +19,11 @@ public class FiMysql
     //comm = conn.CreateCommand();
   }
 
+  public static FiMysql Build(string txProfile)
+  {
+    return new FiMysql(FiAppConfig.GetConnString(txProfile));
+  }
+
   public bool TestConnection()
   {
     try
