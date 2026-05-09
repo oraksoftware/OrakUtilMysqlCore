@@ -40,7 +40,7 @@ public class FiMysql
     }
   }
 
-  private static MySqlParameter[] ProcessParameters(FiKeybean fkbParams)
+  private static MySqlParameter[] ProcessParameters(Fkb fkbParams)
   {
     MySqlParameter[] pars = fkbParams.Select(pair => new MySqlParameter()
     {
@@ -52,7 +52,7 @@ public class FiMysql
 
 
 
-  public virtual Fdr ExecQuery(string query, FiKeybean? parameters)
+  public virtual Fdr ExecQuery(string query, Fkb? parameters)
   {
     Fdr fdrResult = new Fdr();
 
@@ -95,7 +95,7 @@ public class FiMysql
     return fdrResult;
   }
 
-  public Fdr SelectDtb(string query, FiKeybean? parameters)
+  public Fdr SelectDtb(string query, Fkb? parameters)
   {
     Fdr fdrResult = new Fdr();
 
@@ -133,7 +133,7 @@ public class FiMysql
     }
   }
 
-  public virtual DataTable ExecProcDtb(string procName, FiKeybean parameters) //params ParamItem[] parameters
+  public virtual DataTable ExecProcDtb(string procName, Fkb parameters) //params ParamItem[] parameters
   {
     using MySqlConnection conn = new MySqlConnection(this.connString);
     using MySqlCommand comm = conn.CreateCommand();
