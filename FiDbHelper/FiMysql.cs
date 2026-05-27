@@ -76,7 +76,7 @@ public class FiMysql
       result = comm.ExecuteNonQuery();
       // Rows affected is -1 for statements that do not affect rows
       if (result == -1) result = 1;
-      fdrResult.boResult = true;
+      fdrResult.fdBoResult = true;
       fdrResult.lnRowsAffected = result;
     }
     catch (Exception e)
@@ -84,7 +84,7 @@ public class FiMysql
       Console.WriteLine(e);
       //FiAppConfig.fiLog?.Error();
       result = -2;
-      fdrResult.boResult = false;
+      fdrResult.fdBoResult = false;
       fdrResult.refException = e;
     }
     finally
@@ -119,14 +119,14 @@ public class FiMysql
     {
       DataTable dt = new DataTable();
       da.Fill(dt);
-      fdrResult.boResult = true;
-      fdrResult.refDtbVal = dt;
+      fdrResult.fdBoResult = true;
+      fdrResult.fdDtbVal = dt;
       return fdrResult;
     }
     catch (Exception e)
     {
       Console.WriteLine(e);
-      fdrResult.boResult = false;
+      fdrResult.fdBoResult = false;
       fdrResult.refException = e;
       // Optionally, return null or handle differently
       return fdrResult;
